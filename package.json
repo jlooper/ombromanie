@@ -13,6 +13,7 @@
 		"@tensorflow/tfjs-core": "^1.7.1",
 		"core-js": "^3.6.4",
 		"register-service-worker": "^1.6.2",
+		"scatter-gl": "0.0.4",
 		"vue": "^2.6.11",
 		"vue-router": "^3.1.6"
 	},
