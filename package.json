@@ -2,16 +2,21 @@
 	"name": "ombromanie",
 	"version": "0.1.0",
 	"private": true,
+	"main": "./src/assets/sass/styles.scss",
 	"scripts": {
 		"serve": "vue-cli-service serve",
-		"build": "vue-cli-service build",
-		"lint": "vue-cli-service lint"
+		"build": "npm run css-build && vue-cli-service build",
+		"lint": "vue-cli-service lint",
+		"css-build": "node-sass --omit-source-map-url ./src/assets/sass/styles.scss ./public/css/styles.css",
+		"css-watch": "npm run css-build -- --watch",
+		"start": "npm run css-watch"
 	},
 	"dependencies": {
 		"@tensorflow-models/handpose": "0.0.3",
 		"@tensorflow/tfjs-converter": "^1.7.1",
 		"@tensorflow/tfjs-core": "^1.7.1",
 		"core-js": "^3.6.4",
+		"bulma": "^0.7.5",
 		"register-service-worker": "^1.6.2",
 		"scatter-gl": "0.0.4",
 		"vue": "^2.6.11",
@@ -25,6 +30,7 @@
 		"babel-eslint": "^10.0.3",
 		"eslint": "^6.7.2",
 		"eslint-plugin-vue": "^6.1.2",
+		"node-sass": "^4.13.1",
 		"vue-template-compiler": "^2.6.11"
 	}
 }

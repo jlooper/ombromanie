@@ -1,25 +1,30 @@
 <template>
-  <div class="hello">
-    <img src="@/assets/images/bird-shadow.jpg" />
-    <router-link :to="'/show'">
-      <h2>Spectacle Interactif</h2>
-    </router-link>
-  </div>
+	<section class="hero">
+		<div class="hero-body is-large">
+			<div class="container">
+				<h1 class="has-text-white-ter is-size-1 has-text-centered">
+					Spectacle Interactif
+				</h1>
+
+				<div class="has-text-centered"><img src="@/assets/images/bird-shadow.jpg" /></div>
+
+				<h2 class="has-text-centered">
+					<router-link :to="'/show'">
+						<h2 class="is-size-2">entrez ici</h2>
+					</router-link>
+				</h2>
+			</div>
+		</div>
+	</section>
 </template>
 
 <script>
 export default {
-  name: "Home"
+	name: 'Home',
 };
 </script>
-
-<!-- Add "scoped" attribute to limit CSS to this component only -->
-<style>
-h1 {
-  font-size: 4em;
-}
+<style scoped>
 h2 {
-  margin: 40px 0 0;
-  font-size: 3.5em;
+	text-decoration: underline;
 }
 </style>

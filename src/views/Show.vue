@@ -1,5 +1,5 @@
 <template>
-	<div>
+	<div class="wrapper">
 		<div id="info" ref="info" style="display: none;"></div>
 		<div id="predictions" ref="predictions"></div>
 		<div id="canvas-wrapper">
@@ -24,7 +24,6 @@
 <script>
 import * as handpose from '@tensorflow-models/handpose';
 import * as ScatterGL from 'scatter-gl';
-console.log(ScatterGL);
 let videoWidth,
 	videoHeight,
 	scatterGLHasInitialized = false,
@@ -230,5 +229,8 @@ export default {
 #scatter-gl-container {
 	display: inline-block;
 	vertical-align: top;
+}
+.wrapper {
+	padding: 10px;
 }
 </style>
