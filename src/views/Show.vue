@@ -1,9 +1,8 @@
 <template>
 	<div class="wrapper">
-		<div id="info" ref="info" style="display: none;"></div>
-		<div id="predictions" ref="predictions"></div>
+		<div id="info">{{ message }}</div>
 		<div id="canvas-wrapper">
-			<canvas id="output" ref="output" style></canvas>
+			<canvas id="output" ref="output"></canvas>
 			<video
 				id="video"
 				ref="video"
@@ -14,66 +13,76 @@
 					visibility: hidden;
 					width: auto;
 					height: auto;
-					position: absolute;
-				"
+					position: absolute;"
 			></video>
 		</div>
-		<div ref="scatter" id="scatter-gl-container"></div>
+		<div>
+			<canvas id="shadowCanvas" ref="shadowCanvas"></canvas>
+		</div>
 	</div>
 </template>
 <script>
 import * as handpose from '@tensorflow-models/handpose';
-import * as ScatterGL from 'scatter-gl';
-let videoWidth,
-	videoHeight,
-	scatterGLHasInitialized = false,
-	scatterGL,
-	fingerLookupIndices = {
-		thumb: [0, 1, 2, 3, 4],
-		indexFinger: [0, 5, 6, 7, 8],
-		middleFinger: [0, 9, 10, 11, 12],
-		ringFinger: [0, 13, 14, 15, 16],
-		pinky: [0, 17, 18, 19, 20],
-	}; // for rendering each finger as a polyline
-
+import * as tfjsWasm from '@tensorflow/tfjs-backend-wasm';
+import * as tf from '@tensorflow/tfjs';
+import { version_wasm } from '@tensorflow/tfjs-backend-wasm';
+tfjsWasm.setWasmPath(
+	`https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-wasm@${version_wasm}/dist/tfjs-backend-wasm.wasm`
+);
 const VIDEO_WIDTH = 640;
 const VIDEO_HEIGHT = 500;
 
 export default {
-	data: function () {
+	data: function() {
 		return {
+			backend: 'webgl',
 			canvas: null,
+			shadowCanvas: null,
+			message: '',
 			video: null,
 			ctx: null,
+			sctx: null,
 			model: null,
-			renderPointcloud: true,
+			vieoWidth: null,
+			videoHeight: null,
+			fingerLookupIndices: {
+				thumb: [0, 1, 2, 3, 4],
+				indexFinger: [0, 5, 6, 7, 8],
+				middleFinger: [0, 9, 10, 11, 12],
+				ringFinger: [0, 13, 14, 15, 16],
+				pinky: [0, 17, 18, 19, 20],
+			},
 		};
 	},
 	methods: {
-		drawPoint(ctx, y, x, r) {
+		drawPoint(ctx, sctx, y, x, r) {
 			ctx.beginPath();
 			ctx.arc(x, y, r, 0, 2 * Math.PI);
 			ctx.fill();
+
+			sctx.beginPath();
+			sctx.arc(x, y, 20, 0, 2 * Math.PI);
+			sctx.fill();
 		},
 
-		drawKeypoints(ctx, keypoints) {
+		drawKeypoints(ctx, sctx, keypoints) {
 			const keypointsArray = keypoints;
 
 			for (let i = 0; i < keypointsArray.length; i++) {
 				const y = keypointsArray[i][0];
 				const x = keypointsArray[i][1];
-				this.drawPoint(ctx, x - 2, y - 2, 3);
+				this.drawPoint(ctx, sctx, x - 2, y - 2, 3);
 			}
 
-			const fingers = Object.keys(fingerLookupIndices);
+			const fingers = Object.keys(this.fingerLookupIndices);
 			for (let i = 0; i < fingers.length; i++) {
 				const finger = fingers[i];
-				const points = fingerLookupIndices[finger].map((idx) => keypoints[idx]);
-				this.drawPath(ctx, points, false);
+				const points = this.fingerLookupIndices[finger].map((idx) => keypoints[idx]);
+				this.drawPath(ctx, sctx, points, false);
 			}
 		},
 
-		drawPath(ctx, points, closePath) {
+		drawPath(ctx, sctx, points, closePath) {
 			const region = new Path2D();
 			region.moveTo(points[0][0], points[0][1]);
 			for (let i = 1; i < points.length; i++) {
@@ -85,91 +94,88 @@ export default {
 				region.closePath();
 			}
 			ctx.stroke(region);
+			sctx.stroke(region);
 		},
 
 		async frameLandmarks() {
 			//step 5, frame landmarks
-			// These anchor points allow the hand pointcloud to resize according to its
-			// position in the input.
-			const ANCHOR_POINTS = [
-				[0, 0, 0],
-				[0, -VIDEO_HEIGHT, 0],
-				[-VIDEO_WIDTH, 0, 0],
-				[-VIDEO_WIDTH, -VIDEO_HEIGHT, 0],
-			];
 
-			this.ctx.drawImage(this.video, 0, 0, videoWidth, videoHeight, 0, 0, this.canvas.width, this.canvas.height);
+			this.ctx.drawImage(
+				this.video,
+				0,
+				0,
+				this.videoWidth,
+				this.videoHeight,
+				0,
+				0,
+				this.canvas.width,
+				this.canvas.height
+			);
+			let img = new Image();
+			img.src = '@/assets/images/blank.svg';
+			//clear the shadowcanvas screen on each new frame
+			this.sctx.clearRect(0, 0, this.shadowCanvas.width, this.shadowCanvas.height);
+			this.sctx.drawImage(
+				img,
+				0,
+				0,
+				this.videoWidth,
+				this.videoHeight,
+				0,
+				0,
+				this.shadowCanvas.width,
+				this.shadowCanvas.height
+			);
 
 			const predictions = await this.model.estimateHands(this.video);
 
 			if (predictions.length > 0) {
 				const result = predictions[0].landmarks;
-				this.drawKeypoints(this.ctx, result, predictions[0].annotations);
-
-				if (this.renderPointcloud === true && scatterGL != null) {
-					const pointsData = result.map((point) => {
-						return [-point[0], -point[1], -point[2]];
-					});
-
-					const dataset = new ScatterGL.Dataset([...pointsData, ...ANCHOR_POINTS]);
-
-					if (!scatterGLHasInitialized) {
-						scatterGL.render(dataset);
-
-						const fingers = Object.keys(fingerLookupIndices);
-
-						scatterGL.setSequences(fingers.map((finger) => ({ indices: fingerLookupIndices[finger] })));
-						scatterGL.setPointColorer((index) => {
-							if (index < pointsData.length) {
-								return 'steelblue';
-							}
-							return 'white'; // Hide.
-						});
-					} else {
-						scatterGL.updateDataset(dataset);
-					}
-					scatterGLHasInitialized = true;
-				}
+				this.drawKeypoints(this.ctx, this.sctx, result, predictions[0].annotations);
 			}
 			requestAnimationFrame(this.frameLandmarks);
-
-			if (this.renderPointcloud) {
-				document.querySelector(
-					'#scatter-gl-container'
-				).style = `width: ${VIDEO_WIDTH}px; height: ${VIDEO_HEIGHT}px;`;
-
-				//error, not rendering ScatterGL right
-				/*scatterGL = new ScatterGL(document.querySelector('#scatter-gl-container'), {
-					rotateOnStart: false,
-					selectEnabled: false,
-				});*/
-			}
 		},
 
 		async landmarksRealTime(video) {
 			//step 4, start showing landmarks
 
-			videoWidth = video.videoWidth;
-			videoHeight = video.videoHeight;
+			this.videoWidth = video.videoWidth;
+			this.videoHeight = video.videoHeight;
 			//identify canvas and shape it up
 			this.canvas = this.$refs.output;
 
-			this.canvas.width = videoWidth;
-			this.canvas.height = videoHeight;
+			this.canvas.width = this.videoWidth;
+			this.canvas.height = this.videoHeight;
+
+			//set up the shadowCanvas
+			this.shadowCanvas = this.$refs.shadowCanvas;
+			this.shadowCanvas.width = this.videoWidth;
+			this.shadowCanvas.height = this.videoHeight;
 
 			this.ctx = this.canvas.getContext('2d');
+			this.sctx = this.shadowCanvas.getContext('2d');
 
-			video.width = videoWidth;
-			video.height = videoHeight;
+			video.width = this.videoWidth;
+			video.height = this.videoHeight;
 
-			this.ctx.clearRect(0, 0, videoWidth, videoHeight);
+			//paint to main
+
+			this.ctx.clearRect(0, 0, this.videoWidth, this.videoHeight);
 			this.ctx.strokeStyle = 'red';
 			this.ctx.fillStyle = 'red';
-
-			this.ctx.translate(this.canvas.width, 0);
+			this.ctx.translate(this.shadowCanvas.width, 0);
 			this.ctx.scale(-1, 1);
 
-			//now you've set up the canvas, now you can frame its landmarks
+			//paint to white box
+
+			this.sctx.clearRect(0, 0, this.videoWidth, this.videoHeight);
+			this.sctx.strokeStyle = 'gray';
+			this.sctx.lineWidth = 40;
+			this.sctx.fillStyle = 'gray';
+			this.sctx.translate(this.shadowCanvas.width, 0);
+			this.sctx.scale(-1, 1);
+
+			//now you've set up the canvases, now you can frame its landmarks
 			this.frameLandmarks();
 		},
 
@@ -204,33 +210,27 @@ export default {
 	},
 
 	async mounted() {
+		await tf.setBackend(this.backend);
 		//async step 1 - load model, then load video, then pass it to start landmarking
 		this.model = await handpose.load();
-		let video;
+		let webcam;
 		try {
-			video = await this.loadVideo();
+			webcam = await this.loadVideo();
 		} catch (e) {
-			let info = document.getElementById('info');
-			info.textContent = e.message;
-			info.style.display = 'block';
+			this.message = e.message;
 			throw e;
 		}
 
-		this.landmarksRealTime(video);
+		this.landmarksRealTime(webcam);
 	},
 };
 </script>
 
 <style>
-#canvas-wrapper {
-	position: relative;
-}
-#canvas-wrapper,
-#scatter-gl-container {
-	display: inline-block;
-	vertical-align: top;
-}
 .wrapper {
 	padding: 10px;
+}
+#shadowCanvas {
+	background-color: white;
 }
 </style>
