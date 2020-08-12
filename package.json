@@ -13,14 +13,14 @@
 	},
 	"dependencies": {
 		"@tensorflow-models/handpose": "0.0.5",
-		"@tensorflow/tfjs-backend-wasm": "2.0.1",
 		"@tensorflow/tfjs": "2.0.1",
-		"core-js": "^3.6.5",
+		"@tensorflow/tfjs-backend-wasm": "2.0.1",
 		"bulma": "^0.9.0",
+		"core-js": "^3.6.5",
 		"register-service-worker": "^1.7.1",
 		"scatter-gl": "0.0.5",
 		"vue": "^2.6.11",
-		"vue-router": "^3.3.4"
+		"vue-router": "^3.4.3"
 	},
 	"devDependencies": {
 		"@vue/cli-plugin-babel": "~4.4.6",

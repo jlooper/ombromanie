@@ -60,9 +60,9 @@ export default {
 			ctx.arc(x, y, r, 0, 2 * Math.PI);
 			ctx.fill();
 
-			sctx.beginPath();
-			sctx.arc(x, y, 20, 0, 2 * Math.PI);
-			sctx.fill();
+			//sctx.beginPath();
+			//sctx.arc(x, y, r, 0, 2 * Math.PI);
+			//sctx.fill();
 		},
 
 		drawKeypoints(ctx, sctx, keypoints) {
@@ -169,8 +169,10 @@ export default {
 			//paint to white box
 
 			this.sctx.clearRect(0, 0, this.videoWidth, this.videoHeight);
-			this.sctx.strokeStyle = 'gray';
-			this.sctx.lineWidth = 40;
+			this.sctx.shadowColor = 'gray';
+			this.sctx.shadowBlur = 20;
+			this.sctx.lineWidth = 30;
+			this.sctx.lineCap = 'round';
 			this.sctx.fillStyle = 'gray';
 			this.sctx.translate(this.shadowCanvas.width, 0);
 			this.sctx.scale(-1, 1);
