@@ -95,6 +95,7 @@ export default {
 			}
 			ctx.stroke(region);
 			sctx.stroke(region);
+			sctx.fill(region, 'nonzero');
 		},
 
 		async frameLandmarks() {
@@ -175,7 +176,9 @@ export default {
 			this.sctx.shadowOffsetY = 90;
 			this.sctx.lineWidth = 15;
 			this.sctx.lineCap = 'round';
-			this.sctx.fillStyle = 'gray';
+			this.sctx.fillStyle = 'black';
+			this.sctx.strokeStyle = 'black';
+
 			this.sctx.translate(this.shadowCanvas.width, 0);
 			this.sctx.scale(-1, 1);
 
