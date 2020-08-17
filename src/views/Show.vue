@@ -23,12 +23,8 @@
 </template>
 <script>
 import * as handpose from '@tensorflow-models/handpose';
-import * as tfjsWasm from '@tensorflow/tfjs-backend-wasm';
 import * as tf from '@tensorflow/tfjs';
-import { version_wasm } from '@tensorflow/tfjs-backend-wasm';
-tfjsWasm.setWasmPath(
-	`https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-wasm@${version_wasm}/dist/tfjs-backend-wasm.wasm`
-);
+
 const VIDEO_WIDTH = 640;
 const VIDEO_HEIGHT = 500;
 
@@ -52,6 +48,9 @@ export default {
 				ringFinger: [0, 13, 14, 15, 16],
 				pinky: [0, 17, 18, 19, 20],
 			},
+			palmLookupIndices: {
+				palm: [0, 1, 5, 9, 13, 17, 0, 1],
+			},
 		};
 	},
 	methods: {
@@ -59,10 +58,6 @@ export default {
 			ctx.beginPath();
 			ctx.arc(x, y, r, 0, 2 * Math.PI);
 			ctx.fill();
-
-			//sctx.beginPath();
-			//sctx.arc(x, y, r, 0, 2 * Math.PI);
-			//sctx.fill();
 		},
 
 		drawKeypoints(ctx, sctx, keypoints) {
@@ -80,11 +75,16 @@ export default {
 				const points = this.fingerLookupIndices[finger].map((idx) => keypoints[idx]);
 				this.drawPath(ctx, sctx, points, false);
 			}
+			const palmArea = Object.keys(this.palmLookupIndices);
+			for (let i = 0; i < palmArea.length; i++) {
+				const palm = palmArea[i];
+				const points = this.palmLookupIndices[palm].map((idx) => keypoints[idx]);
+				this.drawPath(ctx, sctx, points, true);
+			}
 		},
 
 		drawPath(ctx, sctx, points, closePath) {
 			const region = new Path2D();
-			region.moveTo(points[0][0], points[0][1]);
 			for (let i = 1; i < points.length; i++) {
 				const point = points[i];
 				region.lineTo(point[0], point[1]);
@@ -98,7 +98,7 @@ export default {
 		},
 
 		async frameLandmarks() {
-			//step 5, frame landmarks
+			//step 5, frame landmarks to clear betweene each depiction
 
 			this.ctx.drawImage(
 				this.video,
@@ -169,9 +169,11 @@ export default {
 			//paint to white box
 
 			this.sctx.clearRect(0, 0, this.videoWidth, this.videoHeight);
-			this.sctx.shadowColor = 'gray';
+			this.sctx.shadowColor = 'black';
 			this.sctx.shadowBlur = 20;
-			this.sctx.lineWidth = 30;
+			this.sctx.shadowOffsetX = 90;
+			this.sctx.shadowOffsetY = 90;
+			this.sctx.lineWidth = 15;
 			this.sctx.lineCap = 'round';
 			this.sctx.fillStyle = 'gray';
 			this.sctx.translate(this.shadowCanvas.width, 0);

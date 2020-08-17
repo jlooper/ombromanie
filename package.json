@@ -12,9 +12,9 @@
 		"start": "npm run css-watch"
 	},
 	"dependencies": {
-		"@tensorflow-models/handpose": "0.0.5",
-		"@tensorflow/tfjs": "2.0.1",
-		"@tensorflow/tfjs-backend-wasm": "2.0.1",
+		"@tensorflow-models/handpose": "^0.0.6",
+		"@tensorflow/tfjs": "^2.3.0",
+		"@tensorflow/tfjs-backend-wasm": "^2.3.0",
 		"bulma": "^0.9.0",
 		"core-js": "^3.6.5",
 		"register-service-worker": "^1.7.1",
