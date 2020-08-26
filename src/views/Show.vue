@@ -17,7 +17,7 @@
 			></video>
 		</div>
 		<div>
-			<canvas id="shadowCanvas" ref="shadowCanvas"></canvas>
+			<canvas style="background-color:pink" id="shadowCanvas" ref="shadowCanvas"></canvas>
 		</div>
 		<button @click="startRecording()">Start Recording</button>
 		<button @click="stopRecording()">Stop Recording</button>
@@ -177,7 +177,7 @@ export default {
 			//paint to white box
 
 			this.sctx.clearRect(0, 0, this.videoWidth, this.videoHeight);
-			this.sctx.shadowColor = 'black';
+			this.sctx.shadowColor = 'red';
 			this.sctx.shadowBlur = 20;
 			this.sctx.shadowOffsetX = 90;
 			this.sctx.shadowOffsetY = 90;
@@ -223,9 +223,45 @@ export default {
 		},
 
 		startRecording() {
-			let MediaStream = this.shadowCanvas.captureStream(10);
-			this.recorder = RecordRTC(MediaStream, { type: 'video' });
-			this.recorder.startRecording();
+			var canvasStream = this.shadowCanvas.captureStream();
+			var finalStream = new MediaStream();
+			RecordRTC.getTracks(canvasStream, 'video').forEach(function(track) {
+				finalStream.addTrack(track);
+			});
+
+			var recorder = RecordRTC(finalStream, {
+				type: 'video',
+			});
+
+			recorder.startRecording();
+			var stop = false;
+
+			(function looper() {
+				if (stop) {
+					recorder.stopRecording(function() {
+						var blob = recorder.getBlob();
+						document.body.innerHTML =
+							'<video controls src="' + URL.createObjectURL(blob) + '" autoplay loop></video>';
+
+						canvasStream.stop();
+					});
+					return;
+				}
+				setTimeout(looper, 100);
+			})();
+
+			var seconds = 15;
+			var interval = setInterval(function() {
+				seconds--;
+				/*if(document.querySelector('h1')) {
+                        document.querySelector('h1').innerHTML = seconds + ' seconds remaining.';
+                    }*/
+			}, 1000);
+
+			setTimeout(function() {
+				clearTimeout(interval);
+				stop = true;
+			}, seconds * 1000);
 		},
 
 		stopRecording() {
