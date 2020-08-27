@@ -11,12 +11,12 @@
 							ref="video"
 							playsinline
 							style="
-					-webkit-transform: scaleX(-1);
-					transform: scaleX(-1);
-					visibility: hidden;
-					width: auto;
-					height: auto;
-					position: absolute;"
+								-webkit-transform: scaleX(-1);
+								transform: scaleX(-1);
+								visibility: hidden;
+								width: auto;
+								height: auto;
+								position: absolute;"
 						></video>
 					</div>
 					<div class="column is-half">
@@ -24,11 +24,19 @@
 					</div>
 				</div>
 				<div class="columns is-centered">
-					<div class="column is-half">
-						<button class="button is-large" @click="startRecording()">Start Recording</button>
-						<button class="button is-large" @click="stopRecording()">Stop Recording</button>
-						<a :href="link">Download my video</a>
+					<div class="column is-one-fifth"></div>
+					<div class="column is-one-fifth">
+						<button class="button is-medium mx-10 is-size-4" @click="startRecording()">
+							Start Recording
+						</button>
 					</div>
+					<div class="column is-one-fifth">
+						<button class="button is-medium mx-10 is-size-4" @click="stopRecording()">
+							Stop Recording
+						</button>
+					</div>
+					<div class="column is-one-fifth"><a class="is-size-4" :href="link">View my video</a></div>
+					<div class="column is-one-fifth"></div>
 				</div>
 			</div>
 		</section>
