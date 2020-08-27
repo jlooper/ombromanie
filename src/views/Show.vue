@@ -1,27 +1,37 @@
 <template>
 	<div class="wrapper">
-		<div id="info">{{ message }}</div>
-		<div id="canvas-wrapper">
-			<canvas id="output" ref="output"></canvas>
-			<video
-				id="video"
-				ref="video"
-				playsinline
-				style="
+		<!--<div id="info">{{ message }}</div>-->
+		<section class="section">
+			<div class="container">
+				<div class="columns is-centered">
+					<div id="canvas-wrapper column is-half">
+						<canvas id="output" ref="output"></canvas>
+						<video
+							id="video"
+							ref="video"
+							playsinline
+							style="
 					-webkit-transform: scaleX(-1);
 					transform: scaleX(-1);
 					visibility: hidden;
 					width: auto;
 					height: auto;
 					position: absolute;"
-			></video>
-		</div>
-		<div>
-			<canvas style="background-color:pink" id="shadowCanvas" ref="shadowCanvas"></canvas>
-		</div>
-		<button @click="startRecording()">Start Recording</button>
-		<button @click="stopRecording()">Stop Recording</button>
-		<a :href="link">Download my video</a>
+						></video>
+					</div>
+					<div class="column is-half">
+						<canvas id="shadowCanvas" ref="shadowCanvas"></canvas>
+					</div>
+				</div>
+				<div class="columns is-centered">
+					<div class="column is-half">
+						<button class="button is-large" @click="startRecording()">Start Recording</button>
+						<button class="button is-large" @click="stopRecording()">Stop Recording</button>
+						<a :href="link">Download my video</a>
+					</div>
+				</div>
+			</div>
+		</section>
 	</div>
 </template>
 <script>
@@ -298,10 +308,18 @@ export default {
 </script>
 
 <style>
-.wrapper {
-	padding: 10px;
-}
 #shadowCanvas {
 	background-color: white;
+}
+.canvas-wrapper {
+	padding-top: 20px;
+	margin-top: 10px;
+}
+#output {
+	padding-top: 15px;
+}
+buttons,
+a {
+	margin: 10px;
 }
 </style>
