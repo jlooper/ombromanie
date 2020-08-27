@@ -1,6 +1,6 @@
 <template>
 	<div class="wrapper">
-		<!--<div id="info">{{ message }}</div>-->
+		<p style="text-align: center" class="is-size-3">{{ message }}</p>
 		<section class="section">
 			<div class="container">
 				<div class="columns is-centered">
@@ -19,11 +19,11 @@
 								position: absolute;"
 						></video>
 					</div>
-					<div class="column is-half">
+					<div v-if="ready" class="column is-half">
 						<canvas id="shadowCanvas" ref="shadowCanvas"></canvas>
 					</div>
 				</div>
-				<div class="columns is-centered">
+				<div v-if="ready" class="columns is-centered">
 					<div class="column is-one-fifth"></div>
 					<div class="column is-one-fifth">
 						<button class="button is-medium mx-10 is-size-4" @click="startRecording()">
@@ -57,6 +57,7 @@ export default {
 			canvas: null,
 			shadowCanvas: null,
 			message: '',
+			ready: false,
 			video: null,
 			ctx: null,
 			sctx: null,
@@ -236,7 +237,10 @@ export default {
 		async loadVideo() {
 			//step 2: open camera, set it up, play video of person
 			const video = await this.setupCamera();
+			this.message = 'Video is loaded!';
 			video.play();
+			this.message == '';
+			this.ready = true;
 			return video;
 		},
 
@@ -302,6 +306,7 @@ export default {
 		await tf.setBackend(this.backend);
 		//async step 1 - load model, then load video, then pass it to start landmarking
 		this.model = await handpose.load();
+		this.message = 'Model is loaded! Now loading video';
 		let webcam;
 		try {
 			webcam = await this.loadVideo();
