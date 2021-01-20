@@ -122,12 +122,10 @@ export default {
         mimeType: "video/webm;codecs=vp9",
       });
       (this.recorder.ondataavailable = (e) => {
-        console.log("TCL: e", e);
         this.chunks.push(e.data);
       }),
         this.recorder.start(500);
     },
-    // 停止录制
     stop() {
       if (!this.isStart) {
         return;
@@ -140,7 +138,7 @@ export default {
       this.recorder.stop();
       this.recorder = null;
     },
-    // 下载
+   
     download() {
       this.seconds = 0;
       if (this.chunks.length == 0) {
