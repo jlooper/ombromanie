@@ -138,7 +138,7 @@ export default {
       this.recorder.stop();
       this.recorder = null;
     },
-   
+
     download() {
       this.seconds = 0;
       if (this.chunks.length == 0) {
@@ -154,7 +154,7 @@ export default {
       link.click();
       link.remove();
     },
-    // 计时器控制
+
     startTime() {
       this.updateTime = setInterval(() => {
         this.seconds++;
@@ -290,13 +290,13 @@ export default {
       this.ctx.translate(this.shadowCanvas.width, 0);
       this.ctx.scale(-1, 1);
 
-      //paint to white box
+      //paint to shadow box
 
       this.sctx.clearRect(0, 0, this.videoWidth, this.videoHeight);
       this.sctx.shadowColor = "white";
       this.sctx.shadowBlur = 20;
-      this.sctx.shadowOffsetX = 100;
-      this.sctx.shadowOffsetY = 100;
+      this.sctx.shadowOffsetX = 150;
+      this.sctx.shadowOffsetY = 150;
       this.sctx.lineWidth = 15;
       this.sctx.lineCap = "round";
       this.sctx.fillStyle = "black";
