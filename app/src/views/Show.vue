@@ -1,9 +1,9 @@
 <template>
   <div class="wrapper">
-    <p style="text-align: center" class="is-size-3 has-text-white">
+    <p class="is-size-3 has-text-white has-text-centered">
       {{ message }}
     </p>
-    <p style="text-align: center" class="is-size-3 has-text-white">
+    <p class="is-size-3 has-text-white has-text-centered">
       {{ seconds }}
     </p>
 
@@ -11,6 +11,7 @@
       <div class="container">
         <div class="columns is-centered">
           <div id="canvas-wrapper column is-half">
+            <p class="has-text-black is-size-3">Video Here</p>
             <canvas id="output" ref="output"></canvas>
             <video
               id="video"
@@ -27,7 +28,13 @@
             ></video>
           </div>
           <div v-if="ready" class="column is-half">
-            <canvas id="shadowCanvas" ref="shadowCanvas"></canvas>
+            <p class="has-text-white is-size-3">{{ text }}</p>
+            <canvas
+              class="has-background-black-bis"
+              id="shadowCanvas"
+              ref="shadowCanvas"
+            >
+            </canvas>
           </div>
         </div>
         <div v-if="ready" class="columns is-centered">
@@ -47,18 +54,37 @@
               class="button is-medium mx-10 is-size-4"
               @click="download()"
             >
-              Download Recording
+              Play Recording
             </button>
           </div>
           <div class="column is-one-fifth"></div>
         </div>
       </div>
     </section>
+    <hr />
+
+    <div class="container">
+      <div class="columns is-centered">
+        <div class="column is-one-quarter"></div>
+        <div v-if="!isStart" id="story" class="column is-half">
+          <span
+            v-for="s in story"
+            :key="s"
+            class="has-text-centered has-text-white is-size-3"
+            id="storyText"
+            >{{ s }}&nbsp;</span
+          >
+        </div>
+        <div class="column is-one-quarter"></div>
+      </div>
+    </div>
   </div>
 </template>
 <script>
 import * as handpose from "@tensorflow-models/handpose";
 import * as tf from "@tensorflow/tfjs";
+import * as sdk from "microsoft-cognitiveservices-speech-sdk";
+import axios from "axios";
 
 const VIDEO_WIDTH = 640;
 const VIDEO_HEIGHT = 500;
@@ -78,6 +104,7 @@ export default {
       video: null,
       ctx: null,
       sctx: null,
+      tctx: null,
       model: null,
       timer: "",
       vieoWidth: null,
@@ -94,7 +121,9 @@ export default {
       },
       chunks: [],
       recorder: null,
-      link: "",
+      recognizer: null,
+      text: "Show Me A Story",
+      story: [],
     };
   },
   watch: {
@@ -109,16 +138,22 @@ export default {
   },
   methods: {
     start() {
+      //clear video element
+      let node = document.getElementById("story");
+      while (node.firstChild) {
+        node.removeChild(node.lastChild);
+      }
       if (this.isStart) {
         return;
       }
       this.isStart = true;
+      this.story = [];
       this.seconds = 0;
       this.startTime();
-
+      this.startAudioTranscription();
       this.chunks = [];
-      const stream2 = this.shadowCanvas.captureStream(60); // 60 FPS recording
-      this.recorder = new MediaRecorder(stream2, {
+      const stream = this.shadowCanvas.captureStream(60); // 60 FPS recording
+      this.recorder = new MediaRecorder(stream, {
         mimeType: "video/webm;codecs=vp9",
       });
       (this.recorder.ondataavailable = (e) => {
@@ -136,6 +171,7 @@ export default {
         return;
       }
       this.recorder.stop();
+      this.recognizer.stopContinuousRecognitionAsync();
       this.recorder = null;
     },
 
@@ -144,15 +180,13 @@ export default {
       if (this.chunks.length == 0) {
         return;
       }
-      const link = document.createElement("a");
-      link.style.display = "none";
+      const video = document.createElement("video");
       const fullBlob = new Blob(this.chunks);
       const downloadUrl = window.URL.createObjectURL(fullBlob);
-      link.href = downloadUrl;
-      link.download = `ombromanie${Math.random()}.webm`;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
+      video.src = downloadUrl;
+      document.getElementById("story").appendChild(video);
+      video.autoplay = true;
+      video.controls = true;
     },
 
     startTime() {
@@ -228,7 +262,7 @@ export default {
       let img = new Image();
       img.src = "@/assets/images/blank.svg";
       //clear the shadowcanvas screen on each new frame
-      this.sctx.clearRect(
+      this.sctx.fillRect(
         0,
         0,
         this.shadowCanvas.width,
@@ -265,9 +299,9 @@ export default {
 
       this.videoWidth = video.videoWidth;
       this.videoHeight = video.videoHeight;
-      //identify canvas and shape it up
-      this.canvas = this.$refs.output;
 
+      //set up skeleton canvas
+      this.canvas = this.$refs.output;
       this.canvas.width = this.videoWidth;
       this.canvas.height = this.videoHeight;
 
@@ -293,14 +327,14 @@ export default {
       //paint to shadow box
 
       this.sctx.clearRect(0, 0, this.videoWidth, this.videoHeight);
-      this.sctx.shadowColor = "white";
+      this.sctx.shadowColor = "black";
       this.sctx.shadowBlur = 20;
       this.sctx.shadowOffsetX = 150;
       this.sctx.shadowOffsetY = 150;
-      this.sctx.lineWidth = 15;
+      this.sctx.lineWidth = 20;
       this.sctx.lineCap = "round";
-      this.sctx.fillStyle = "black";
-      this.sctx.strokeStyle = "black";
+      this.sctx.fillStyle = "white";
+      this.sctx.strokeStyle = "white";
 
       this.sctx.translate(this.shadowCanvas.width, 0);
       this.sctx.scale(-1, 1);
@@ -318,15 +352,15 @@ export default {
       }
       this.video = this.$refs.video;
       const stream = await navigator.mediaDevices.getUserMedia({
-        audio: false,
         video: {
           facingMode: "user",
           width: VIDEO_WIDTH,
           height: VIDEO_HEIGHT,
         },
       });
-      this.video.srcObject = stream;
+
       return new Promise((resolve) => {
+        this.video.srcObject = stream;
         this.video.onloadedmetadata = () => {
           resolve(this.video);
         };
@@ -341,6 +375,30 @@ export default {
       this.message == "";
       this.ready = true;
       return video;
+    },
+    async startAudioTranscription() {
+      try {
+        //get the key
+        const response = await axios.get("/api/getKey");
+        this.subKey = response.data;
+        //sdk
+
+        let speechConfig = sdk.SpeechConfig.fromSubscription(
+          this.subKey,
+          "eastus"
+        );
+        let audioConfig = sdk.AudioConfig.fromDefaultMicrophoneInput();
+        this.recognizer = new sdk.SpeechRecognizer(speechConfig, audioConfig);
+
+        this.recognizer.recognized = (s, e) => {
+          this.text = e.result.text;
+          this.story.push(this.text);
+        };
+
+        this.recognizer.startContinuousRecognitionAsync();
+      } catch (error) {
+        console.error(error);
+      }
     },
   },
 
@@ -364,12 +422,13 @@ export default {
 
 <style>
 #shadowCanvas {
-  border: 2px white solid;
+  border: 2px black solid;
 }
 .canvas-wrapper {
   padding-top: 20px;
   margin-top: 10px;
 }
+
 #output {
   padding-top: 15px;
 }
