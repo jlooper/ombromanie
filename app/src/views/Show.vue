@@ -397,7 +397,7 @@ export default {
 
         this.recognizer.startContinuousRecognitionAsync();
       } catch (error) {
-        console.error(error);
+        this.message = error;
       }
     },
   },
