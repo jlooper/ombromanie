@@ -2,6 +2,8 @@
 
 Telling stories by casting hand shadows is an ancient Asian art form, popularized in the 18th century in Europe. The effect can be achieved simply by turning out all lights and using one candle and one person making shadows in front of a screen or wall. It's a fun way to entertain yourself and the kids by creating stories on a wall with just your hands.
 
+Try the app [live](https://aka.ms/ombromanie)!
+
 ![Hand shadows on the wall](hand.png)
 
 What if, however, you're clean out of candles and it's the middle of the day and you're bored working from home? Time to reproduce the experience of an Ombromanie show...but using a web app!
