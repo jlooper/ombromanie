@@ -23,7 +23,6 @@
 		"core-js": "^3.6.5",
 		"microsoft-cognitiveservices-speech-sdk": "^1.15.0",
 		"vue": "^2.6.11",
-		"vue-audio-recorder": "^3.0.1",
 		"vue-router": "^3.4.3"
 	},
 	"devDependencies": {
