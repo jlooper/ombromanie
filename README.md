@@ -2,7 +2,7 @@
 
 Telling stories by casting hand shadows is an ancient Asian art form, popularized in the 18th century in Europe. The effect can be achieved simply by turning out all lights and using one candle and one person making shadows in front of a screen or wall. It's a fun way to entertain yourself and the kids by creating stories on a wall with just your hands.
 
-Try the app [live](https://aka.ms/ombromanie)!
+Try the app [live](https://brave-river-00627910f.1.azurestaticapps.net/)!
 
 ![Hand shadows on the wall](hand.png)
 
