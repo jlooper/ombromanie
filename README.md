@@ -94,3 +94,5 @@ Learn more about [Azure Static Web Apps](https://docs.microsoft.com/en-us/learn/
 [Blogpost](https://dev.to/azure/ombromanie-creating-hand-shadow-stories-with-azure-speech-and-tensorflow-js-handposes-3cln)
 
 [Slides](ombromanie.pptx), presented at WebStories Conf, Lille.
+
+[Video Conference Talk about Ombromanie](https://www.youtube.com/watch?v=8Aow0rkp1Lw&ab_channel=MTGFrance)
